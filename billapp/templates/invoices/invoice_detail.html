@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-black mb-2">{{ invoice.get_invoice_type_display }} - {{ invoice.invoice_number }}</h1>
+        <div class="flex gap-2">
+          <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full 
+            {% if invoice.invoice_type == 'BILL' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+            {{ invoice.get_invoice_type_display }}
+          </span>
+          <span id="invoiceStatus" class="inline-block px-3 py-1 text-xs font-semibold rounded-full 
+            {% if invoice.mailed %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+            {{ invoice.mailed|yesno:"Mailed,Not Mailed" }}
+          </span>
+        </div>
+      </div>
+      <div class="flex gap-3 mt-4 md:mt-0">
+        <a href="{% url 'download_invoice' invoice.pk %}" class="bg-green-500 text-white font-bold px-6 py-3 shadow-md rounded-full hover:bg-green-600 transition">
+          Download Excel
+        </a> 
+        {% if not invoice.mailed %}
+        <button id="sendBtn-{{ invoice.id }}"
+          class="bg-blue-500 text-white font-bold px-8 py-3 shadow-md rounded-full hover:bg-blue-600 transition text-center"
+          onclick="event.preventDefault(); sendInvoiceEmail({{ invoice.id }});">
+          Send Mail
+        </button>
+        {% endif %}
+
+
+<div id="statusModal" 
+     class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 px-4">
+  <div class="bg-white border border-gray-200 shadow-lg rounded-[24px] w-full max-w-xs sm:max-w-sm md:max-w-md p-6 text-center">
+    
+    
+    <h2 id="modalTitle" 
+        class="text-xl font-semibold text-black mb-3 sm:mb-4">
+    </h2>
+    
+    
+    <p id="modalMessage" 
+       class="mb-6 text-gray-600 text-sm sm:text-base">
+    </p>
+    
+   
+    <button onclick="closeModal()" 
+            class="w-full sm:w-auto bg-yellow-500 text-black font-bold px-6 py-2 rounded-full shadow-md hover:bg-yellow-600 transition">
+      OK
+    </button>
+  </div>
+</div>
+        <a href="{% url 'invoice_delete' invoice.pk %}?next={{ invoice.get_absolute_url }}" class="bg-red-500 text-white font-bold px-6 py-3 shadow-md rounded-full hover:bg-red-600 transition">
+          Delete
+        </a> 
+        <a href="{% url 'invoice_list' %}" class="bg-yellow-500 text-black font-bold px-6 py-3 shadow-md rounded-full hover:bg-yellow-600 transition">
+          Back to List
+        </a>
+      </div>
+    </div>
+
+  
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      
+     
+      <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+        <h2 class="text-xl font-semibold text-black mb-4">Invoice Information</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Type:</span>
+            <span class="text-black">{{ invoice.get_invoice_type_display }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Number:</span>
+            <span class="text-black font-medium">{{ invoice.invoice_number }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Date:</span>
+            <span class="text-black">{{ invoice.date|date:"M d, Y" }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Customer:</span>
+            <span class="text-black">{{ invoice.customer.name }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2">
+            <span class="font-semibold text-gray-700">Total Amount:</span>
+            <span class="text-black font-bold text-lg">₹{{ invoice.total_amount }}</span>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+        <h2 class="text-xl font-semibold text-black mb-4">Customer Details</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Name:</span>
+            <span class="text-black">{{ invoice.customer.name }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Email:</span>
+            <span class="text-black">{{ invoice.customer.email }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Phone:</span>
+            <span class="text-black">{{ invoice.customer.phone }}</span>
+          </div>
+          <div class="flex justify-between items-start py-2 border-b border-gray-100">
+            <span class="font-semibold text-gray-700">Address:</span>
+            <span class="text-black text-right max-w-xs">{{ invoice.customer.address }}</span>
+          </div>
+          <div class="flex justify-between items-center py-2">
+            <span class="font-semibold text-gray-700">GST Number:</span>
+            <span class="text-black font-mono">{{ invoice.customer.gst_number }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+   
+    <div class="bg-white border border-gray-200 shadow-md p-4 rounded-[24px]">
+      <h2 class="text-xl font-semibold text-black mb-4">Line Items</h2>
+      
+      
+      <div class="hidden md:block">
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200 rounded-[24px] overflow-hidden">
+            <thead class="bg-yellow-500 text-black">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold">Product Name</th>
+                <th class="px-4 py-3 text-center font-semibold">Quantity</th>
+                <th class="px-4 py-3 text-center font-semibold">Rate</th>
+                <th class="px-4 py-3 text-center font-semibold">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white">
+              {% for item in invoice.items.all %}
+              <tr class="border-t hover:bg-gray-100">
+                <td class="px-4 py-3 font-medium">{{ item.product_name }}</td>
+                <td class="px-4 py-3 text-center">{{ item.quantity }}</td>
+                <td class="px-4 py-3 text-center">₹{{ item.rate }}</td>
+                <td class="px-4 py-3 text-center font-semibold">₹{{ item.amount }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-gray-500">
+                  <div class="py-4">
+                    <h3 class="text-gray-600 font-bold text-lg">No Items Found</h3>
+                    <p class="text-gray-400 text-sm">This invoice has no line items</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="md:hidden">
+        {% for item in invoice.items.all %}
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
+          <h3 class="font-bold text-lg mb-3 text-black">{{ item.product_name }}</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="font-semibold text-gray-700">Quantity:</span>
+              <span class="text-black">{{ item.quantity }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="font-semibold text-gray-700">Rate:</span>
+              <span class="text-black">₹{{ item.rate }}</span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-gray-200">
+              <span class="font-semibold text-gray-700">Amount:</span>
+              <span class="text-black font-bold text-lg">₹{{ item.amount }}</span>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-8">
+          <h3 class="text-gray-600 font-bold text-lg">No Items Found</h3>
+          <p class="text-gray-400 text-sm">This invoice has no line items</p>
+        </div>
+        {% endfor %}
+      </div>
+
+     
+      {% if invoice.items.all %}
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <div class="flex justify-end">
+          <div class="bg-yellow-500 text-black px-6 py-3 rounded-full">
+            <span class="font-bold text-lg">Total: ₹{{ invoice.total_amount }}</span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+      {% comment %} <a href="{% url 'download_invoice' invoice.pk %}" class="bg-green-500 text-white font-bold px-8 py-3 shadow-md rounded-full hover:bg-green-600 transition text-center">
+        Download Excel File
+      </a> {% endcomment %}
+      {% if not invoice.mailed %}
+      <button class="bg-blue-500 text-white font-bold px-8 py-3 shadow-md rounded-full hover:bg-blue-600 transition" onclick="markAsMailed({{ invoice.pk }})">
+        Mark as Mailed
+      </button>
+      {% endif %}
+      <a href="{% url 'invoice_list' %}" class="bg-gray-500 text-white font-bold px-8 py-3 shadow-md rounded-full hover:bg-gray-600 transition text-center">
+        Back to Invoice List
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+let lastSuccessBtnId = null;  // Track which button was last successful
+
+async function sendInvoiceEmail(invoiceId) {
+  const btn = document.getElementById(`sendBtn-${invoiceId}`);
+  lastSuccessBtnId = null;
+
+  btn.textContent = "Sending...";
+  btn.disabled = true;  
+  btn.classList.add("opacity-50", "cursor-not-allowed");
+
+  try {
+    const response = await fetch(`/invoices/${invoiceId}/send-email/`);
+    const data = await response.json();
+
+    document.getElementById("modalTitle").textContent = 
+        data.status === "success" ? "Success!" : "Error";
+    document.getElementById("modalMessage").textContent = data.message;
+
+    if (data.status === "success") {
+      lastSuccessBtnId = `sendBtn-${invoiceId}`;
+    } else {
+      btn.textContent = "Send Mail";
+      btn.disabled = false;   
+    }
+
+    document.getElementById("statusModal").classList.remove("hidden");
+
+  } catch (error) {
+    document.getElementById("modalTitle").textContent = "Error";
+    document.getElementById("modalMessage").textContent = "Something went wrong!";
+    btn.textContent = "Send Mail";
+    btn.disabled = false;
+    document.getElementById("statusModal").classList.remove("hidden");
+  }
+}
+
+function closeModal() {
+  document.getElementById("statusModal").classList.add("hidden");
+
+  // If success, update the status badge + remove send button
+  if (lastSuccessBtnId) {
+    const btn = document.getElementById(lastSuccessBtnId);
+    if (btn) btn.style.display = "none";
+
+    // Update the status badge to "Mailed"
+    const statusBadge = document.getElementById("invoiceStatus");
+    if (statusBadge) {
+      statusBadge.textContent = "Mailed";
+      statusBadge.classList.remove("bg-red-100", "text-red-800");
+      statusBadge.classList.add("bg-green-100", "text-green-800");
+    }
+  }
+}
+
+function markAsMailed(invoiceId) {
+
+    if (confirm('Mark this invoice as mailed?')) {
+        console.log('Marking invoice ' + invoiceId + ' as mailed');
+        
+    }
+}
+</script>
+
+{% endblock %}

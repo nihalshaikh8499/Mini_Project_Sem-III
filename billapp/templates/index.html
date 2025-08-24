@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen ">
+  <div class="max-w-7xl mx-auto px-4 py-6 ">
+
+    
+    <div class="flex flex-col md:flex-row justify-between gap-6">
+      <div class="md:w-2/3 bg-white border border-gray-200 shadow-md p-4 rounded-[24px]">
+        <h2 class="text-lg font-semibold text-black mb-4">Sales Overview</h2>
+        <div class="w-full h-64 flex items-center justify-center bg-gray-50 rounded">
+          
+          <canvas id="salesChart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+
+      
+      <div class="md:w-1/3 flex flex-col gap-4">
+        <div class="bg-white border border-gray-200 shadow-md p-4 rounded-[24px] h-80">
+          <h2 class="text-lg font-semibold text-black mb-3">Recent Customers</h2>
+          <ul class="space-y-2">
+            {% for customer in recent_customers %}
+            <a href="{% url 'customer_detail' customer.pk %}">
+            <li class="flex justify-between items-center py-2 px-3 mb-2 rounded-full bg-gray-100 hover:bg-gray-100">
+              <span class="font-medium">{{ customer.name }}</span>
+              <span class="text-sm text-gray-500">{{ customer.email }}</span>
+            </li>
+            </a>
+            {% empty %}
+                <div class="h-64 flex flex-col items-center justify-center">
+                  <h3 class="text-gray-600 font-bold text-md text-center mb-2">Get Started</h3>
+                  <p class="text-gray-400 text-sm text-center">Add a new customer</p>
+                </div>
+            {% endfor %}
+          </ul>
+        </div>
+
+        
+        <div class="flex flex-col md:flex-row md:justify-end gap-4">
+          <a href="#" class="w-full shadow-lg md:w-1/2 bg-yellow-500 text-black font-bold text-center py-3 rounded-full hover:bg-yellow-600 transition">
+            Create Invoice
+          </a>
+          <a href="{% url "customer_create" %}" class="w-full shadow-lg md:w-1/2 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+            Add Customer
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    
+    <div class="mt-10 bg-white border border-gray-200 shadow-md p-4 rounded-[24px]">
+      <h2 class="text-xl font-semibold text-black mb-4">Recent Invoices</h2>
+      <div class="overflow-x-auto">
+        <table class="min-w-full border border-gray-200 rounded-[24px] overflow-hidden">
+          <thead class="bg-yellow-500 text-black">
+            <tr>
+              <th class="px-4 py-2 text-center">Invoice No.</th>
+              <th class="px-4 py-2 text-center">Customer</th>
+              <th class="px-4 py-2 text-center">Amount</th>
+              <th class="px-4 py-2 text-center">Date</th>
+              <th class="px-4 py-2 text-center">Type</th>
+            </tr>
+          </thead>
+ <tbody class="bg-white">
+        {% for invoice in recent_invoices %}
+        <tr class="border-t hover:bg-gray-100">
+          <td class="px-4 py-2 font-medium text-center">{{ invoice.invoice_number }}</td>
+          <td class="px-4 py-2 text-center">{{ invoice.customer.name }}</td>
+          <td class="px-4 py-2 text-center">₹{{ invoice.total_amount|floatformat:2 }}</td>
+          <td class="px-4 py-2 text-center">{{ invoice.date|date:"d M Y" }}</td>
+          <td class="px-4 py-2 text-center font-semibold {% if invoice.invoice_type == 'BILL' %}text-green-600{% else %}text-blue-600{% endif %}">
+            {{ invoice.invoice_type }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-4 text-gray-500">No invoices found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const salesChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      datasets: [{
+        label: 'Sales (₹)',
+        data: {{ monthly_sales_data|safe }},
+        backgroundColor: '#facc15',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+{% endblock %}

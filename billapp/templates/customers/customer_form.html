@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    
+    
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-2">
+        {% if is_update %}Edit Customer{% else %}Add New Customer{% endif %}
+      </h1>
+      {% comment %} <p class="text-gray-600">
+        {% if is_update %}Update customer information below{% else %}Fill in the details to add a new customer{% endif %}
+      </p> {% endcomment %}
+    </div>
+
+    
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+          
+          <div>
+            <label for="{{ form.name.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.name.label }}
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.name.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          
+          <div>
+            <label for="{{ form.email.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.email.label }}
+            </label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.email.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          
+          <div>
+            <label for="{{ form.phone.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.phone.label }}
+            </label>
+            {{ form.phone }}
+            {% if form.phone.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.phone.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          
+          <div>
+            <label for="{{ form.gst_number.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.gst_number.label }}
+            </label>
+            {{ form.gst_number }}
+            {% if form.gst_number.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.gst_number.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+         
+          <div>
+            <label for="{{ form.address.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.address.label }}
+            </label>
+            {{ form.address }}
+            {% if form.address.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.address.errors.0 }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        
+        <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button type="submit" class="flex-1 bg-yellow-500 text-black font-bold py-3 rounded-full hover:bg-yellow-600 transition">
+            {% if is_update %}Update Customer{% else %}Add Customer{% endif %}
+          </button>
+          <a href="{% url 'customer_list' %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

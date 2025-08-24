@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen ">
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-2">
+        Create New Invoice
+      </h1>
+    </div>
+    
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+        
+        
+        <div class="mb-8">
+          <h2 class="text-xl font-bold text-black mb-4 border-b border-gray-200 pb-2">Invoice Details</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.invoice_type.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+                Invoice Type
+              </label>
+              <select name="invoice_type" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                <option value="BILL" {% if form.invoice_type.value == 'BILL' %}selected{% endif %}>Bill</option>
+                <option value="QUOTATION" {% if form.invoice_type.value == 'QUOTATION' %}selected{% endif %}>Quotation</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="{{ form.invoice_number.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+                Invoice Number
+              </label>
+              <input type="text" name="invoice_number" value="{{ form.invoice_number.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter invoice number" required>
+              {% if form.invoice_number.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.invoice_number.errors.0 }}</p>
+              {% endif %}
+            </div>
+            
+            <div>
+              <label for="{{ form.customer.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+                Customer
+              </label>
+              <select name="customer" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" required>
+                <option value="">Select Customer</option>
+                {% for customer in customers %}
+                  <option value="{{ customer.id }}" {% if form.customer.value == customer.id %}selected{% endif %}>
+                    {{ customer.name }} - {{ customer.email }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div>
+              <label for="{{ form.date.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+                Date
+              </label>
+              <input type="date" name="date" value="{{ form.date.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500">
+            </div>
+          </div>
+        </div>
+        
+        
+        <div class="mb-8">
+          <h2 class="text-xl font-bold text-black mb-4 border-b border-gray-200 pb-2">Products (Maximum 6)</h2>
+          
+          <div class="space-y-6">
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 1</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_1" value="{{ form.product_name_1.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_1" value="{{ form.quantity_1.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_1" value="{{ form.rate_1.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_1" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 2</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_2" value="{{ form.product_name_2.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_2" value="{{ form.quantity_2.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_2" value="{{ form.rate_2.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_2" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 3</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_3" value="{{ form.product_name_3.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_3" value="{{ form.quantity_3.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_3" value="{{ form.rate_3.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_3" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 4</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_4" value="{{ form.product_name_4.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_4" value="{{ form.quantity_4.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_4" value="{{ form.rate_4.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_4" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 5</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_5" value="{{ form.product_name_5.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_5" value="{{ form.quantity_5.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_5" value="{{ form.rate_5.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_5" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <h3 class="text-lg font-semibold text-gray-800 mb-3">Product 6</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-gray-700 mb-1 font-semibold">Product Name</label>
+                  <input type="text" name="product_name_6" value="{{ form.product_name_6.value|default:'' }}" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Enter product name">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Quantity</label>
+                  <input type="number" name="quantity_6" value="{{ form.quantity_6.value|default:'' }}" min="1" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="Qty">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Rate</label>
+                  <input type="number" name="rate_6" value="{{ form.rate_6.value|default:'' }}" step="0.01" min="0" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-1 font-semibold">Amount</label>
+                  <input type="text" id="amount_6" readonly class="w-full px-4 py-2 border border-gray-300 rounded-full bg-gray-100" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        
+        <div class="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <div class="flex justify-between items-center">
+            <span class="text-lg font-semibold text-gray-700">Total Amount:</span>
+            <span id="total_amount" class="text-2xl font-bold text-black">₹0.00</span>
+          </div>
+        </div>
+        
+        {% if form.non_field_errors %}
+          <div class="mb-4 p-4 bg-red-100 text-red-800 rounded-lg">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+        
+        
+        <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button type="submit" class="flex-1 bg-yellow-500 text-black font-bold py-3 rounded-full hover:bg-yellow-600 transition">
+            Create Invoice
+          </button>
+          <a href="{% url 'customer_list' %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  
+  function calculateAmount(productNum) {
+    const quantityField = document.querySelector(`input[name="quantity_${productNum}"]`);
+    const rateField = document.querySelector(`input[name="rate_${productNum}"]`);
+    const amountField = document.getElementById(`amount_${productNum}`);
+    
+    const quantity = parseFloat(quantityField.value) || 0;
+    const rate = parseFloat(rateField.value) || 0;
+    const amount = quantity * rate;
+    
+    amountField.value = amount.toFixed(2);
+    
+    calculateTotal();
+  }
+  
+  function calculateTotal() {
+    let total = 0;
+    for (let i = 1; i <= 6; i++) {
+      const amountField = document.getElementById(`amount_${i}`);
+      const amount = parseFloat(amountField.value) || 0;
+      total += amount;
+    }
+    
+    document.getElementById('total_amount').textContent = `₹${total.toFixed(2)}`;
+  }
+  
+ 
+  for (let i = 1; i <= 6; i++) {
+    const quantityField = document.querySelector(`input[name="quantity_${i}"]`);
+    const rateField = document.querySelector(`input[name="rate_${i}"]`);
+    
+    if (quantityField && rateField) {
+      quantityField.addEventListener('input', () => calculateAmount(i));
+      rateField.addEventListener('input', () => calculateAmount(i));
+    }
+  }
+  
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    for (let i = 1; i <= 6; i++) {
+      calculateAmount(i);
+    }
+  });
+</script>
+{% endblock %}

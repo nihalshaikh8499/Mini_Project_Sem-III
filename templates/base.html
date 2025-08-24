@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Billing Dashboard{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            inter: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            yellow: {
+                100: '#FFF9DB', 
+                200: '#FFF1AA', 
+                300: '#FFE770', 
+                400: '#FFDE4D', 
+                450: '#FFD835', 
+                500: '#ffd835', 
+                600: '#e9c62b', 
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+</head>
+<body class="bg-white text-black font-inter ">
+
+  <aside class="fixed top-0 left-0 h-full w-64 bg-yellow-500 text-black hidden md:block flex-shrink-0 shadow-lg z-50">
+    <div class="p-6 text-2xl font-bold border-b border-yellow-600">
+      <a href="{% url "index" %}">QuickBillr.</a>
+    </div>
+    <nav class="p-4 space-y-2 h-full overflow-y-auto">
+      <a href="#" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Dashboard</a>
+      <a href="{% url "customer_list" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Customers</a>
+      <a href="{% url "invoice_list" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Invoices</a>
+      <a href="#" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Service Tracking</a>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="block px-4 py-2 rounded-full hover:bg-red-600 font-medium hover:text-white w-full text-left" type="submit">Logout</button>      
+      </form> 
+    </nav>
+  </aside>
+
+  <div class="md:hidden fixed top-0 left-0 w-full bg-yellow-500 z-50 flex items-center justify-between px-4 py-3 shadow">
+    <div class="text-xl font-bold">
+      <a href="{% url "index" %}">QuickBillr.</a>
+    </div>
+    <button id="menu-toggle" class="text-black focus:outline-none">
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"
+           viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+  </div>
+
+
+  <div id="mobile-menu" class="md:hidden fixed inset-y-0 left-0 w-64 bg-yellow-500 text-black transform -translate-x-full transition-transform duration-200 ease-in-out z-60 shadow-lg">
+    <div class="p-6 text-2xl font-bold border-b border-yellow-600 mt-16">
+      <a href="{% url "index" %}">QuickBillr.</a>
+    </div>
+    <nav class="p-4 space-y-2 h-full overflow-y-auto">
+      <a href="#" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Dashboard</a>
+      <a href="{% url "customer_list" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Customers</a>
+      <a href="{% url "invoice_list" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Invoices</a>
+      <a href="#" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Service Tracking</a>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button class="block px-4 py-2 rounded hover:bg-red-600 font-medium hover:text-white w-full text-left" type="submit">Logout</button>      
+      </form>
+    </nav>
+  </div>
+
+  
+  <main class="md:ml-64 pt-16 md:pt-0 h-screen ">
+    <div class="p-4 md:p-8">
+      {% block content %}
+
+      {% endblock %}
+    </div>
+  </main>
+
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('-translate-x-full');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!mobileMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+        mobileMenu.classList.add('-translate-x-full');
+      }
+    });
+  </script>
+
+</body>
+</html>
