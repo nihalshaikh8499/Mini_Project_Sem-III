@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-2">
+        {% if is_update %}
+          Update Machine for {{ machine.customer.name }}
+        {% else %}
+          Add New Machine for {{ customer.name }}
+        {% endif %}
+      </h1>
+    </div>
+
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+          
+          <div>
+            <label for="{{ form.machine_name.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.machine_name.label }}
+            </label>
+            {{ form.machine_name }}
+            {% if form.machine_name.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.machine_name.errors.0 }}</p>
+            {% endif %}
+          </div>
+          
+          <div>
+            <label for="{{ form.machine_type.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.machine_type.label }}
+            </label>
+            {{ form.machine_type }}
+            {% if form.machine_type.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.machine_type.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <div>
+            <label for="{{ form.serial_number.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.serial_number.label }}
+            </label>
+            {{ form.serial_number }}
+            {% if form.serial_number.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.serial_number.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <div>
+            <label for="{{ form.purchase_date.id_for_label }}" class="block text-gray-700 mb-1 font-semibold">
+              {{ form.purchase_date.label }}
+            </label>
+            {{ form.purchase_date }}
+            {% if form.purchase_date.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.purchase_date.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button type="submit" class="flex-1 bg-yellow-500 text-black font-bold py-3 rounded-full hover:bg-yellow-600 transition">
+            {% if is_update %}
+              Update Machine
+            {% else %}
+              Add Machine
+            {% endif %}
+          </button>
+          {% if is_update %}
+            <a href="{% url 'customer_detail' machine.customer.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+              Cancel
+            </a>
+          {% else %}
+            <a href="{% url 'customer_detail' customer.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+              Cancel
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

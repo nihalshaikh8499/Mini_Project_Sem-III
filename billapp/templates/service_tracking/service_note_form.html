@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-2">
+        {% if is_update %}
+          Update Service Note
+        {% else %}
+          Add Service Note
+        {% endif %}
+      </h1>
+      <p class="text-gray-600">for {{ machine.machine_name }}</p>
+      <p class="text-sm text-gray-500 mt-1">Serial: {{ machine.serial_number }} | Customer: {{ machine.customer.name }}</p>
+    </div>
+
+    <!-- Current Machine Info Card -->
+    <div class="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 shadow-md p-4 rounded-[24px] mb-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-semibold text-blue-800">Current Counter Reading</h3>
+          <p class="text-2xl font-bold text-blue-600">{{ machine.copy_counter|floatformat:0 }}</p>
+        </div>
+        <div class="text-right">
+          <h3 class="text-sm font-semibold text-blue-800">Machine Type</h3>
+          <p class="text-sm text-blue-600">{{ machine.get_machine_type_display }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Note Form -->
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="space-y-6">
+          
+          <!-- Service Date -->
+          <div>
+            <label for="{{ form.date_of_service.id_for_label }}" class="block text-gray-700 mb-2 font-semibold">
+              {{ form.date_of_service.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.date_of_service }}
+            {% if form.date_of_service.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.date_of_service.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Serviceman Name -->
+          <div>
+            <label for="{{ form.serviceman_name.id_for_label }}" class="block text-gray-700 mb-2 font-semibold">
+              {{ form.serviceman_name.label }}
+            </label>
+            {{ form.serviceman_name }}
+            {% if form.serviceman_name.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.serviceman_name.errors.0 }}</p>
+            {% endif %}
+            <p class="text-sm text-gray-500 mt-1">Optional - Enter the name of the technician who performed the service</p>
+          </div>
+
+          <!-- Service Fee -->
+          <div>
+            <label for="{{ form.fee_charged.id_for_label }}" class="block text-gray-700 mb-2 font-semibold">
+              {{ form.fee_charged.label }}
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">₹</span>
+              <div class="pl-8">
+                {{ form.fee_charged }}
+              </div>
+            </div>
+            {% if form.fee_charged.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.fee_charged.errors.0 }}</p>
+            {% endif %}
+            {% if form.fee_charged.help_text %}
+              <p class="text-sm text-gray-500 mt-1">{{ form.fee_charged.help_text }}</p>
+            {% endif %}
+          </div>
+
+          <!-- Service Notes -->
+          <div>
+            <label for="{{ form.note.id_for_label }}" class="block text-gray-700 mb-2 font-semibold">
+              {{ form.note.label }} <span class="text-red-500">*</span>
+            </label>
+            {{ form.note }}
+            {% if form.note.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ form.note.errors.0 }}</p>
+            {% endif %}
+            <p class="text-sm text-gray-500 mt-1">Describe the service performed, issues found, parts replaced, etc.</p>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button type="submit" class="flex-1 bg-green-500 text-white font-bold py-3 rounded-full hover:bg-green-600 transition duration-200">
+            {% if is_update %}
+              Update Service Note
+            {% else %}
+              Add Service Note
+            {% endif %}
+          </button>
+          <a href="{% url 'machine_detail' machine.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition duration-200">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Quick Tips Card -->
+    <div class="bg-yellow-50 border border-yellow-200 shadow-md p-4 rounded-[24px] mt-6">
+      <h3 class="text-sm font-semibold text-yellow-800 mb-2">📝 Service Note Tips</h3>
+      <ul class="text-sm text-yellow-700 space-y-1">
+        <li>• Include specific issues found and actions taken</li>
+        <li>• Note any parts replaced or consumables refilled</li>
+        <li>• Record customer feedback or special requests</li>
+        <li>• Mention any follow-up requirements</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

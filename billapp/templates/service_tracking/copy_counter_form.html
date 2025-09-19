@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    
+    <!-- Header Section -->
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-2">Update Copy Counter</h1>
+      <p class="text-gray-600">{{ machine.machine_name }}</p>
+      <p class="text-sm text-gray-500 mt-1">Serial: {{ machine.serial_number }} | {{ machine.get_machine_type_display }}</p>
+    </div>
+
+    <!-- Current Counter Display -->
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px] mb-6">
+      <div class="text-center">
+        <h3 class="text-lg font-semibold text-gray-600 mb-2">Current Counter Reading</h3>
+        <p class="text-5xl font-bold text-blue-600 mb-2">{{ machine.copy_counter|default:"0"|floatformat:0 }}</p>
+        <div class="flex justify-center items-center gap-4 mt-4 text-sm text-gray-500">
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span>Customer: {{ machine.customer.name }}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 9l6-6m0 0l6 6m-6-6v12"></path>
+            </svg>
+            <span>Last Updated: {{ machine.updated_at|date:"d M Y"|default:"Never" }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter Update Form -->
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="space-y-6">
+          <div class="text-center">
+            <label for="{{ form.copy_counter.id_for_label }}" class="block text-gray-700 mb-4 font-semibold text-lg">
+              {{ form.copy_counter.label }}
+            </label>
+            {{ form.copy_counter }}
+            {% if form.copy_counter.errors %}
+              <p class="text-red-500 text-sm mt-2">{{ form.copy_counter.errors.0 }}</p>
+            {% endif %}
+            {% if form.copy_counter.help_text %}
+              <p class="text-sm text-blue-600 mt-2 font-medium">{{ form.copy_counter.help_text }}</p>
+            {% endif %}
+            <p class="text-sm text-gray-500 mt-2">Enter the current counter reading displayed on the machine</p>
+          </div>
+        </div>
+
+        <!-- Counter Difference Preview -->
+        <div class="bg-gray-50 rounded-[16px] p-4 mt-6" id="counterPreview" style="display: none;">
+          <div class="text-center">
+            <h4 class="text-sm font-semibold text-gray-600 mb-2">Counter Change Preview</h4>
+            <div class="flex justify-center items-center gap-4 text-sm">
+              <span class="text-gray-500">Previous: <span class="font-semibold">{{ machine.copy_counter|floatformat:0 }}</span></span>
+              <span class="text-gray-400">→</span>
+              <span class="text-gray-500">New: <span class="font-semibold" id="newCounter">-</span></span>
+              <span class="text-gray-400">|</span>
+              <span id="counterDiff" class="font-semibold">Difference: -</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+          <button type="submit" class="flex-1 bg-yellow-500 text-black font-bold py-3 rounded-full hover:bg-yellow-600 transition duration-200">
+            Update Counter
+          </button>
+          <a href="{% url 'machine_detail' machine.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition duration-200">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Important Notes Card -->
+    <div class="bg-red-50 border border-red-200 shadow-md p-4 rounded-[24px] mt-6">
+      <h3 class="text-sm font-semibold text-red-800 mb-2">⚠️ Important Notes</h3>
+      <ul class="text-sm text-red-700 space-y-1">
+        <li>• Ensure you read the counter value directly from the machine display</li>
+        <li>• The new value should be higher than the current counter reading</li>
+        <li>• Double-check the numbers before submitting to avoid errors</li>
+        <li>• This change will affect service scheduling and billing calculations</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Real-time counter difference calculation
+document.addEventListener('DOMContentLoaded', function() {
+  const counterInput = document.getElementById('{{ form.copy_counter.id_for_label }}');
+  const counterPreview = document.getElementById('counterPreview');
+  const newCounterSpan = document.getElementById('newCounter');
+  const counterDiffSpan = document.getElementById('counterDiff');
+  const currentCounter = {{ machine.copy_counter|default:0 }};
+
+  if (counterInput) {
+    counterInput.addEventListener('input', function() {
+      const newValue = parseInt(this.value) || 0;
+      
+      if (newValue > 0) {
+        counterPreview.style.display = 'block';
+        newCounterSpan.textContent = newValue.toLocaleString();
+        
+        const difference = newValue - currentCounter;
+        if (difference >= 0) {
+          counterDiffSpan.textContent = `Difference: +${difference.toLocaleString()}`;
+          counterDiffSpan.className = 'font-semibold text-green-600';
+        } else {
+          counterDiffSpan.textContent = `Difference: ${difference.toLocaleString()}`;
+          counterDiffSpan.className = 'font-semibold text-red-600';
+        }
+      } else {
+        counterPreview.style.display = 'none';
+      }
+    });
+  }
+});
+</script>
+
+{% endblock %}

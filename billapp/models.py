@@ -44,3 +44,47 @@ class LineItem(models.Model):
     def save(self, *args, **kwargs):
         self.amount = self.quantity * self.rate  
         super().save(*args, **kwargs)
+
+class Machines(models.Model):
+    MACHINE_TYPES = [
+        ("PHOTOCOPIER", "Photocopier"),
+        ("PRINTER_LASER", "Laser Printer"),
+        ("PRINTER_INKJET", "Inkjet Printer"),
+        ("MFD", "Multifunction Device"),
+        ("SCANNER", "Scanner"),
+        ("FAX", "Fax Machine"),
+        ("PART", "Machine Part"),
+        ("TONER", "Toner Cartridge"),
+        ("INK", "Ink Cartridge"),
+        ("RIBBON", "Ribbon"),
+        ("PAPER", "Paper Tray"),
+    ]
+    
+    machine_name = models.CharField(max_length=255)
+    machine_type = models.CharField(max_length=50, choices=MACHINE_TYPES)
+    serial_number = models.CharField(max_length=255, unique=True)
+    purchase_date = models.DateField()
+    warranty_expiry = models.DateField()
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    copy_counter = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.machine_name
+    
+class ServiceNote(models.Model):
+    machine = models.ForeignKey(
+        'Machines',
+        on_delete=models.CASCADE,
+        related_name='service_notes' 
+    )
+    date_of_service = models.DateField()
+    note = models.TextField()
+    serviceman_name = models.CharField(max_length=255, blank=True) 
+    fee_charged = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+
+    def __str__(self):
+        return f"Note for {self.machine.machine_name} on {self.date_of_service}"
+
+    class Meta:
+        ordering = ['-date_of_service']

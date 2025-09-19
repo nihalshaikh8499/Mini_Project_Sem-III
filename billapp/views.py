@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Customer
-from .forms import CustomerForm, InvoiceForm
+from .forms import CustomerForm, InvoiceForm, MachineForm,ServiceNoteForm, CopyCounterForm
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib import messages
@@ -20,7 +20,7 @@ import json
 import os
 from datetime import datetime
 from decimal import Decimal
-from .models import Customer, Invoice, LineItem
+from .models import Customer, Invoice, LineItem, Machines, ServiceNote
 from django.contrib.auth.decorators import login_required
 import re
 from datetime import datetime
@@ -40,7 +40,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import subprocess
 import shutil
- 
+from dateutil.relativedelta import relativedelta
+from django.db.models import Sum, Avg, Count
 
 
 class CustomerListView(LoginRequiredMixin, ListView):
@@ -520,3 +521,199 @@ def update_payment_status(request, pk):
         else:
             return JsonResponse({"success": False, "message": "Invoice already marked as Paid"})
     return JsonResponse({"success": False, "message": "Invalid request"})
+
+
+def add_machine(request, customer_id):
+    customer = get_object_or_404(Customer, pk=customer_id)
+    
+    if request.method == 'POST':
+        form = MachineForm(request.POST)
+        if form.is_valid():
+            # Create a machine instance but don't save it to the DB yet
+            machine = form.save(commit=False)
+            
+            # Set the customer relationship
+            machine.customer = customer
+            
+            # Automatically calculate the warranty expiry date
+            purchase_date = form.cleaned_data['purchase_date']
+            machine.warranty_expiry = purchase_date + relativedelta(months=+6)
+            
+            # Now save the complete machine object to the database
+            machine.save()
+            
+            # Redirect back to the customer's detail page
+            return redirect('customer_detail', pk=customer.id)
+    else:
+        form = MachineForm()
+        
+    context = {
+        'form': form,
+        'customer': customer
+    }
+    return render(request, 'service_tracking/machine_form.html', context)
+
+def machine_update(request, pk):
+    machine = get_object_or_404(Machines, pk=pk)
+    if request.method == 'POST':
+        form = MachineForm(request.POST, instance=machine)
+        if form.is_valid():
+            # Recalculate warranty if purchase date changes
+            updated_machine = form.save(commit=False)
+            if 'purchase_date' in form.changed_data:
+                purchase_date = form.cleaned_data['purchase_date']
+                updated_machine.warranty_expiry = purchase_date + relativedelta(months=+6)
+            updated_machine.save()
+            return redirect('customer_detail', pk=machine.customer.pk)
+    else:
+        form = MachineForm(instance=machine)
+        
+    context = {
+        'form': form,
+        'is_update': True, 
+        'machine': machine
+    }
+    return render(request, 'service_tracking/machine_form.html', context)
+
+
+def machine_delete(request, pk):
+    machine = get_object_or_404(Machines, pk=pk)
+    customer_pk = machine.customer.pk  
+    
+    if request.method == 'POST':
+        machine.delete()
+        return redirect('customer_detail', pk=customer_pk)
+        
+    context = {
+        'machine': machine
+    }
+    return render(request, 'service_tracking/machine_confirm_delete.html', context)
+
+def machine_detail(request, pk):
+    """Display detailed view of a machine with all its information and service notes"""
+    machine = get_object_or_404(Machines, pk=pk)
+    
+    context = {
+        'machine': machine,
+    }
+    return render(request, 'service_tracking/machine_detail.html', context)
+
+def add_service_note(request, machine_pk):
+    """Add a new service note for a machine"""
+    machine = get_object_or_404(Machines, pk=machine_pk)
+    
+    if request.method == 'POST':
+        form = ServiceNoteForm(request.POST)
+        if form.is_valid():
+            service_note = form.save(commit=False)
+            service_note.machine = machine
+            service_note.save()
+            messages.success(request, 'Service note added successfully!')
+            return redirect('machine_detail', pk=machine.pk)
+    else:
+        form = ServiceNoteForm()
+    
+    context = {
+        'form': form,
+        'machine': machine,
+        'is_update': False
+    }
+    return render(request, 'service_tracking/service_note_form.html', context)
+
+def update_service_note(request, pk):
+    """Update an existing service note"""
+    service_note = get_object_or_404(ServiceNote, pk=pk)
+    machine = service_note.machine
+    
+    if request.method == 'POST':
+        form = ServiceNoteForm(request.POST, instance=service_note)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Service note updated successfully!')
+            return redirect('machine_detail', pk=machine.pk)
+    else:
+        form = ServiceNoteForm(instance=service_note)
+    
+    context = {
+        'form': form,
+        'machine': machine,
+        'service_note': service_note,
+        'is_update': True
+    }
+    return render(request, 'service_tracking/service_note_form.html', context)
+
+def delete_service_note(request, pk):
+    """Delete a service note with confirmation"""
+    service_note = get_object_or_404(ServiceNote, pk=pk)
+    machine = service_note.machine
+    
+    if request.method == 'POST':
+        service_note.delete()
+        messages.success(request, 'Service note deleted successfully!')
+        return redirect('machine_detail', pk=machine.pk)
+    
+    context = {
+        'service_note': service_note,
+        'machine': machine
+    }
+    return render(request, 'service_tracking/service_note_confirm_delete.html', context)
+
+def update_copy_counter(request, machine_pk):
+    """Update the copy counter for a machine"""
+    machine = get_object_or_404(Machines, pk=machine_pk)
+    
+    if request.method == 'POST':
+        form = CopyCounterForm(request.POST, instance=machine)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Copy counter updated to {machine.copy_counter}!')
+            return redirect('machine_detail', pk=machine.pk)
+    else:
+        form = CopyCounterForm(instance=machine)
+    
+    context = {
+        'form': form,
+        'machine': machine
+    }
+    return render(request, 'service_tracking/copy_counter_form.html', context)
+
+def reset_copy_counter(request, machine_pk):
+    """Reset the copy counter to zero with confirmation"""
+    machine = get_object_or_404(Machines, pk=machine_pk)
+    
+    if request.method == 'POST':
+        machine.copy_counter = 0
+        machine.save()
+        messages.success(request, 'Copy counter has been reset to 0!')
+        return redirect('machine_detail', pk=machine.pk)
+    
+    context = {
+        'machine': machine
+    }
+    return render(request, 'service_tracking/copy_counter_reset_confirm.html', context)
+
+def service_notes_view(request):
+    """
+    View to display all service notes with machine count and fee information
+    """
+    # Get all service notes ordered by date (newest first)
+    service_notes = ServiceNote.objects.select_related(
+        'machine', 
+        'machine__customer'
+    ).order_by('-date_of_service')
+    
+    # Calculate statistics
+    stats = service_notes.aggregate(
+        total_notes=Count('id'),
+        total_revenue=Sum('fee_charged'),
+        average_fee=Avg('fee_charged')
+    )
+    
+    context = {
+        'service_notes': service_notes,
+        'total_service_notes': stats['total_notes'] or 0,
+        'total_service_revenue': stats['total_revenue'] or 0,
+        'average_service_fee': stats['average_fee'] or 0,
+    }
+    
+    return render(request, 'service_tracking/service_notes.html', context)

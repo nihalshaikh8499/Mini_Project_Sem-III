@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-red-600 mb-2">Reset Copy Counter</h1>
+      <p class="text-gray-600">Are you sure you want to reset the counter to 0?</p>
+    </div>
+
+    <div class="bg-white border border-red-200 shadow-md p-6 rounded-[24px] mb-6">
+      <div class="text-center">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">{{ machine.machine_name }}</h2>
+        <div class="space-y-2 text-gray-600">
+          <p><span class="font-semibold">Serial Number:</span> {{ machine.serial_number }}</p>
+          <p><span class="font-semibold">Customer:</span> {{ machine.customer.name }}</p>
+          
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <p class="text-sm font-semibold text-gray-500 mb-2">Current Counter</p>
+            <p class="text-4xl font-bold text-blue-600">{{ machine.copy_counter|default:"0" }}</p>
+            <p class="text-sm text-gray-500 mt-2">Will be reset to</p>
+            <p class="text-4xl font-bold text-red-600">0</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-red-50 border border-red-300 p-4 rounded-[24px] mb-6">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-800">
+            <strong>Warning:</strong> This action cannot be undone. The current counter value will be permanently lost.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
+      <form method="post">
+        {% csrf_token %}
+        <div class="flex flex-col md:flex-row gap-4">
+          <button type="submit" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-full hover:bg-red-600 transition">
+            Yes, Reset Counter to 0
+          </button>
+          <a href="{% url 'machine_detail' machine.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

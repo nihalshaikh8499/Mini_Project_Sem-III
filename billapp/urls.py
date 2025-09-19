@@ -27,4 +27,21 @@ urlpatterns = [
   path("invoices/<int:pk>/send-email/", send_invoice_email_view, name="send_invoice_email"),
   path("invoices/<int:pk>/update-payment-status/", views.update_payment_status, name="update_payment_status"),
 
+  path('customer/<int:customer_id>/add-machine/', views.add_machine, name='add_machine'),
+  path('machine/<int:pk>/update/', views.machine_update, name='machine_update'),
+  path('machine/<int:pk>/delete/', views.machine_delete, name='machine_delete'),
+
+  path('machine/<int:pk>/', views.machine_detail, name='machine_detail'),
+    
+    # Service Note URLs
+  path('machine/<int:machine_pk>/add-service-note/', views.add_service_note, name='add_service_note'),
+  path('service-note/<int:pk>/update/', views.update_service_note, name='update_service_note'),
+  path('service-note/<int:pk>/delete/', views.delete_service_note, name='delete_service_note'),
+  path('service-notes/', views.service_notes_view, name='service_notes'),
+  
+  # Copy Counter URLs
+  path('machine/<int:machine_pk>/update-counter/', views.update_copy_counter, name='update_copy_counter'),
+  path('machine/<int:machine_pk>/reset-counter/', views.reset_copy_counter, name='reset_copy_counter'),
+
+
 ]

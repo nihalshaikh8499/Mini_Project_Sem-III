@@ -1,8 +1,9 @@
 from django import forms 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Invoice, Customer
+from .models import Invoice, Customer, ServiceNote, Machines
 from decimal import Decimal
+from django.utils import timezone
 
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField()
@@ -138,3 +139,101 @@ class InvoiceForm(forms.Form):
             raise forms.ValidationError('At least one product must be added.')
         
         return cleaned_data
+    
+from .models import Machines
+
+class MachineForm(forms.ModelForm):
+    class Meta:
+        model = Machines
+        fields = ['machine_name', 'machine_type', 'serial_number', 'purchase_date']
+        widgets = {
+            'purchase_date': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Tailwind CSS classes to all form fields
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
+            })
+
+class ServiceNoteForm(forms.ModelForm):
+    class Meta:
+        model = ServiceNote
+        fields = ['date_of_service', 'serviceman_name', 'note', 'fee_charged']
+        widgets = {
+            'date_of_service': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent'
+                }
+            ),
+            'serviceman_name': forms.TextInput(
+                attrs={
+                    'class': 'w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent',
+                    'placeholder': 'Enter serviceman name'
+                }
+            ),
+            'note': forms.Textarea(
+                attrs={
+                    'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent',
+                    'rows': 5,
+                    'placeholder': 'Enter service details, issues found, actions taken, etc.'
+                }
+            ),
+            'fee_charged': forms.NumberInput(
+                attrs={
+                    'class': 'w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-right',
+                    'placeholder': '0.00',
+                    'min': '0',
+                    'step': '0.01'
+                }
+            ),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set field labels
+        self.fields['date_of_service'].label = 'Service Date'
+        self.fields['serviceman_name'].label = 'Serviceman Name'
+        self.fields['note'].label = 'Service Notes'
+        self.fields['fee_charged'].label = 'Service Fee (₹)'
+        
+        # Make fields optional
+        self.fields['serviceman_name'].required = False
+        self.fields['fee_charged'].required = False
+        
+        # Set help text
+        self.fields['fee_charged'].help_text = 'Optional - Enter the service fee in rupees (e.g., 500.00)'
+        
+        # Set today's date as default for new forms (not when editing existing service notes)
+        if not self.instance.pk:  # Only for new service notes
+            today = timezone.now().date()
+            self.fields['date_of_service'].initial = today
+            # Also set the widget value for immediate display
+            self.fields['date_of_service'].widget.attrs['value'] = today.strftime('%Y-%m-%d')
+
+class CopyCounterForm(forms.ModelForm):
+    class Meta:
+        model = Machines
+        fields = ['copy_counter']
+        widgets = {
+            'copy_counter': forms.NumberInput(
+                attrs={
+                    'class': 'w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-center text-2xl font-bold',
+                    'placeholder': 'Enter new counter value',
+                    'min': '0'
+                }
+            ),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['copy_counter'].label = 'New Copy Counter Value'
+        
+       
+        if self.instance and self.instance.pk:
+            current_value = self.instance.copy_counter
+            self.fields['copy_counter'].help_text = f'Current counter value: {current_value:,}'

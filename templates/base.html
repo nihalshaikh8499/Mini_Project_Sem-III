@@ -37,10 +37,10 @@
       <a href="{% url "index" %}">QuickBillr.</a>
     </div>
     <nav class="p-4 space-y-2 h-full overflow-y-auto">
-      <a href="#" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Dashboard</a>
+      <a href="{% url "index" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Dashboard</a>
       <a href="{% url "customer_list" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Customers</a>
       <a href="{% url "invoice_list" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Invoices</a>
-      <a href="#" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Service Tracking</a>
+      <a href="{% url "service_notes" %}" class="block px-4 py-2 rounded-full hover:bg-yellow-600 font-medium">Service Tracking</a>
       <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
         <button class="block px-4 py-2 rounded-full hover:bg-red-600 font-medium hover:text-white w-full text-left" type="submit">Logout</button>      
@@ -66,10 +66,10 @@
       <a href="{% url "index" %}">QuickBillr.</a>
     </div>
     <nav class="p-4 space-y-2 h-full overflow-y-auto">
-      <a href="#" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Dashboard</a>
+      <a href="{% url "index" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Dashboard</a>
       <a href="{% url "customer_list" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Customers</a>
       <a href="{% url "invoice_list" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Invoices</a>
-      <a href="#" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Service Tracking</a>
+      <a href="{% url "service_notes" %}" class="block px-4 py-2 rounded hover:bg-yellow-600 font-medium">Service Tracking</a>
       <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
         <button class="block px-4 py-2 rounded hover:bg-red-600 font-medium hover:text-white w-full text-left" type="submit">Logout</button>      

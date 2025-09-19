@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="bg-white text-black min-h-screen">
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-black mb-4 md:mb-0">Machine Details</h1>
+      <div class="flex gap-4">
+        <a href="{% url 'machine_update' machine.pk %}" class="bg-blue-500 text-white font-bold px-6 py-3 rounded-full hover:bg-blue-600 transition">
+          Edit Machine
+        </a>
+        <a href="{% url 'customer_detail' machine.customer.pk %}" class="bg-black text-white font-bold px-6 py-3 rounded-full hover:bg-gray-800 transition">
+          Back to Customer
+        </a>
+        <a href="{% url 'add_service_note' machine.pk %}" class="bg-green-500 text-white font-bold px-6 py-3 rounded-full hover:bg-green-600 transition">
+          + Add Service Note
+        </a>
+      </div>
+    </div>
+
+    <!-- Machine Information Card -->
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px] mb-8">
+      <div class="grid md:grid-cols-2 gap-6">
+        
+        <!-- Left Column -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Machine Name</label>
+            <p class="text-lg font-medium">{{ machine.machine_name }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Machine Type</label>
+            <p class="text-gray-700">{{ machine.get_machine_type_display }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Serial Number</label>
+            <p class="text-gray-700">{{ machine.serial_number }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Customer</label>
+            <p class="text-gray-700">
+              <a href="{% url 'customer_detail' machine.customer.pk %}" class="text-blue-600 hover:text-blue-800 underline">
+                {{ machine.customer.name }}
+              </a>
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Purchase Date</label>
+            <p class="text-gray-700">{{ machine.purchase_date|date:"d M Y" }}</p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Warranty Expiry</label>
+            <p class="text-gray-700">{{ machine.warranty_expiry|date:"d M Y" }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-black mb-1">Warranty Status</label>
+            {% now "Y-m-d" as today %}
+            {% if machine.warranty_expiry|date:"Y-m-d" >= today %}
+              <p class="text-green-600 font-semibold">Under Warranty</p>
+              <p class="text-sm text-gray-500">
+                {% with days_left=machine.warranty_expiry|timeuntil %}
+                  {{ days_left }} remaining
+                {% endwith %}
+              </p>
+            {% else %}
+              <p class="text-red-600 font-semibold">Warranty Expired</p>
+              <p class="text-sm text-gray-500">
+                {% with days_expired=machine.warranty_expiry|timesince %}
+                  Expired {{ days_expired }} ago
+                {% endwith %}
+              </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy Counter Card -->
+    <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px] mb-8">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div>
+          <h3 class="text-xl font-bold text-black mb-2">Copy Counter</h3>
+          <p class="text-3xl font-bold text-blue-600">{{ machine.copy_counter|default:"0" }}</p>
+        </div>
+        <div class="flex gap-4 mt-4 md:mt-0">
+          <a href="{% url 'update_copy_counter' machine.pk %}" class="bg-yellow-500 text-black font-bold px-6 py-3 rounded-full hover:bg-yellow-600 transition">
+            Update Counter
+          </a>
+          <a href="{% url 'reset_copy_counter' machine.pk %}" class="bg-red-500 text-white font-bold px-6 py-3 rounded-full hover:bg-red-600 transition">
+            Reset Counter
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Notes Section -->
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-bold text-black">Service History</h2>
+
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for service_note in machine.service_notes.all %}
+          <div class="bg-white border border-gray-200 shadow-md p-4 rounded-[16px]">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <p class="text-sm font-semibold text-gray-500">{{ service_note.date_of_service|date:"d M Y" }}</p>
+                {% if service_note.serviceman_name %}
+                  <p class="text-xs text-gray-400">by {{ service_note.serviceman_name }}</p>
+                {% endif %}
+              </div>
+              <div class="flex gap-1">
+                <a href="{% url 'update_service_note' service_note.pk %}" class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-2 py-1 rounded text-xs">
+                  Edit
+                </a>
+                <a href="{% url 'delete_service_note' service_note.pk %}" class="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded text-xs">
+                  Delete
+                </a>
+              </div>
+            </div>
+            <div class="border-t border-gray-100 pt-3">
+              <p class="text-sm text-gray-700 line-clamp-4">{{ service_note.note|truncatewords:30 }}</p>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full bg-gray-50 border border-gray-200 text-center p-6 rounded-[24px]">
+            <p class="text-gray-600">No service records found for this machine.</p>
+            <a href="{% url 'add_service_note' machine.pk %}" class="inline-block mt-4 bg-green-500 text-white font-bold px-6 py-2 rounded-full hover:bg-green-600 transition">
+              Add First Service Note
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col md:flex-row gap-4 mt-8 pt-6 border-t border-gray-200">
+      <a href="{% url 'machine_update' machine.pk %}" class="flex-1 bg-yellow-500 text-black font-bold text-center py-3 rounded-full hover:bg-yellow-600 transition">
+        Edit Machine
+      </a>
+      <a href="{% url 'machine_delete' machine.pk %}" class="flex-1 bg-red-500 text-white font-bold text-center py-3 rounded-full hover:bg-red-600 transition">
+        Delete Machine
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
