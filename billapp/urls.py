@@ -38,6 +38,8 @@ urlpatterns = [
   path('service-note/<int:pk>/update/', views.update_service_note, name='update_service_note'),
   path('service-note/<int:pk>/delete/', views.delete_service_note, name='delete_service_note'),
   path('service-notes/', views.service_notes_view, name='service_notes'),
+  path("service-note/select-machine/", views.select_machine_for_note, name="select_machine_for_note"),
+  path("api/machines/", views.get_machines, name="get_machines"),
   
   # Copy Counter URLs
   path('machine/<int:machine_pk>/update-counter/', views.update_copy_counter, name='update_copy_counter'),

@@ -42,7 +42,7 @@ import subprocess
 import shutil
 from dateutil.relativedelta import relativedelta
 from django.db.models import Sum, Avg, Count
-
+from django.urls import reverse
 
 class CustomerListView(LoginRequiredMixin, ListView):
     model = Customer
@@ -131,7 +131,11 @@ def index(request):
 
     
     current_year = datetime.now().year
-    invoices = Invoice.objects.filter(date__year=current_year)
+    invoices = Invoice.objects.filter(
+        date__year=current_year, 
+        invoice_type=Invoice.BILL, 
+        payment_status=Invoice.PAID
+    )
 
     monthly_sales = (
         invoices.annotate(month=TruncMonth('date'))
@@ -143,7 +147,9 @@ def index(request):
     sales_data = [0] * 12
     for entry in monthly_sales:
         month_index = entry['month'].month - 1
-        sales_data[month_index] = float(entry['total'])
+        if entry['total'] is not None:
+            sales_data[month_index] = float(entry['total'])
+
 
     return render(request, 'index.html', {
         'recent_customers': recent_customers,
@@ -514,8 +520,8 @@ def send_invoice_email_view(request, pk):
 def update_payment_status(request, pk):
     if request.method == "POST":
         invoice = get_object_or_404(Invoice, pk=pk)
-        if not invoice.payment_status:  
-            invoice.payment_status = True
+        if invoice.payment_status != 'PAID':  # Fixed condition
+            invoice.payment_status = 'PAID'
             invoice.save()
             return JsonResponse({"success": True, "message": "Payment marked as Paid"})
         else:
@@ -598,6 +604,52 @@ def machine_detail(request, pk):
     }
     return render(request, 'service_tracking/machine_detail.html', context)
 
+def select_machine_for_note(request):
+    if request.method == 'POST':
+        machine_id = request.POST.get('machine_id')
+        next_url = request.POST.get('next', '')
+        if machine_id:
+            add_note_url = reverse('add_service_note', args=[machine_id])
+            if next_url:
+                add_note_url += f"?next={next_url}"
+            return redirect(add_note_url)
+
+    customers = Customer.objects.all()
+    return render(request, "service_tracking/select_machine_for_note.html", {"customers": customers})
+
+def get_machines(request):
+    customer_id = request.GET.get("customer_id")
+    machines = Machines.objects.filter(customer_id=customer_id)
+    data = [{"id": m.id, "name": m.machine_name, "serial_number": m.serial_number} for m in machines]
+    return JsonResponse(data, safe=False)
+
+
+def service_notes_view(request):
+    """
+    View to display all service notes with machine count and fee information
+    """
+    # Get all service notes ordered by date (newest first)
+    service_notes = ServiceNote.objects.select_related(
+        'machine', 
+        'machine__customer'
+    ).order_by('-created_at')
+    
+    # Calculate statistics
+    stats = service_notes.aggregate(
+        total_notes=Count('id'),
+        total_revenue=Sum('fee_charged'),
+        average_fee=Avg('fee_charged')
+    )
+    
+    context = {
+        'service_notes': service_notes,
+        'total_service_notes': stats['total_notes'] or 0,
+        'total_service_revenue': stats['total_revenue'] or 0,
+        'average_service_fee': stats['average_fee'] or 0,
+    }
+    
+    return render(request, 'service_tracking/service_notes.html', context)
+
 def add_service_note(request, machine_pk):
     """Add a new service note for a machine"""
     machine = get_object_or_404(Machines, pk=machine_pk)
@@ -607,8 +659,17 @@ def add_service_note(request, machine_pk):
         if form.is_valid():
             service_note = form.save(commit=False)
             service_note.machine = machine
+            service_note.copy_counter_at_service = machine.copy_counter
             service_note.save()
             messages.success(request, 'Service note added successfully!')
+
+           
+            next_url = request.POST.get('next')
+            if next_url:
+                return redirect(next_url)
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
             return redirect('machine_detail', pk=machine.pk)
     else:
         form = ServiceNoteForm()
@@ -616,7 +677,8 @@ def add_service_note(request, machine_pk):
     context = {
         'form': form,
         'machine': machine,
-        'is_update': False
+        'is_update': False,
+        'next': request.GET.get('next', ''),
     }
     return render(request, 'service_tracking/service_note_form.html', context)
 
@@ -630,6 +692,14 @@ def update_service_note(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Service note updated successfully!')
+
+            # Redirect dynamically
+            next_url = request.POST.get('next')
+            if next_url:
+                return redirect(next_url)
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
             return redirect('machine_detail', pk=machine.pk)
     else:
         form = ServiceNoteForm(instance=service_note)
@@ -638,7 +708,8 @@ def update_service_note(request, pk):
         'form': form,
         'machine': machine,
         'service_note': service_note,
-        'is_update': True
+        'is_update': True,
+        'next': request.GET.get('next', ''),
     }
     return render(request, 'service_tracking/service_note_form.html', context)
 
@@ -646,12 +717,23 @@ def delete_service_note(request, pk):
     """Delete a service note with confirmation"""
     service_note = get_object_or_404(ServiceNote, pk=pk)
     machine = service_note.machine
-    
+
     if request.method == 'POST':
         service_note.delete()
         messages.success(request, 'Service note deleted successfully!')
+
+        # First try explicit "next"
+        next_url = request.POST.get('next')
+        if next_url:
+            return redirect(next_url)
+
+        # Fallbacks
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+
         return redirect('machine_detail', pk=machine.pk)
-    
+
     context = {
         'service_note': service_note,
         'machine': machine
@@ -692,28 +774,3 @@ def reset_copy_counter(request, machine_pk):
     }
     return render(request, 'service_tracking/copy_counter_reset_confirm.html', context)
 
-def service_notes_view(request):
-    """
-    View to display all service notes with machine count and fee information
-    """
-    # Get all service notes ordered by date (newest first)
-    service_notes = ServiceNote.objects.select_related(
-        'machine', 
-        'machine__customer'
-    ).order_by('-date_of_service')
-    
-    # Calculate statistics
-    stats = service_notes.aggregate(
-        total_notes=Count('id'),
-        total_revenue=Sum('fee_charged'),
-        average_fee=Avg('fee_charged')
-    )
-    
-    context = {
-        'service_notes': service_notes,
-        'total_service_notes': stats['total_notes'] or 0,
-        'total_service_revenue': stats['total_revenue'] or 0,
-        'average_service_fee': stats['average_fee'] or 0,
-    }
-    
-    return render(request, 'service_tracking/service_notes.html', context)

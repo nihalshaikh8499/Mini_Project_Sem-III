@@ -8,10 +8,16 @@
   <div class="max-w-7xl mx-auto px-4 py-6">
     
     
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-black mb-2">Service Notes</h1>
-      <p class="text-gray-600">Complete service history for all machines</p>
-    </div>
+<div class="mb-8 flex items-center justify-between">
+  <div>
+    <h1 class="text-3xl font-bold text-black mb-2">Service Notes</h1>
+    <p class="text-gray-600">Complete service history for all machines</p>
+  </div>
+  <a href="{% url 'select_machine_for_note' %}" 
+     class="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-3 rounded-full transition duration-200">
+    + Add Service Note
+  </a>
+</div>
 
     
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -74,12 +80,6 @@
             <option value="MFD">Multifunction Device</option>
             <option value="SCANNER">Scanner</option>
             <option value="FAX">Fax Machine</option>
-          </select>
-          <select id="sortBy" class="px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500">
-            <option value="date_desc">Latest First</option>
-            <option value="date_asc">Oldest First</option>
-            <option value="fee_desc">Highest Fee</option>
-            <option value="fee_asc">Lowest Fee</option>
           </select>
         </div>
       </div>
@@ -156,9 +156,17 @@
 
           <!-- Right Section - Metrics -->
           <div class="lg:w-1/6">
+            <div class="flex gap-1">
+                <a href="{% url 'update_service_note' service_note.pk %}" class="bg-blue-100 text-blue-600 hover:bg-blue-200 px-2 py-1 rounded-[16px] text-xs mb-2">
+                  Edit
+                </a>
+                <a href="{% url 'delete_service_note' service_note.pk %}" class="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded-[16px] text-xs mb-2">
+                  Delete
+                </a>
+              </div>
             <div class="flex flex-row lg:flex-col gap-4 lg:gap-3">
               <div class="flex-1 lg:flex-none bg-green-50 rounded-[16px] p-4 text-center">
-                <div class="text-2xl font-bold text-green-700">{{ service_note.machine.copy_counter|floatformat:0 }}</div>
+                <div class="text-2xl font-bold text-green-700">{{ service_note.copy_counter_at_service|floatformat:0 }}</div>
                 <div class="text-xs text-green-600 mt-1">Machine Count</div>
               </div>
               
@@ -198,14 +206,12 @@
 document.addEventListener('DOMContentLoaded', function() {
   const searchInput = document.getElementById('searchInput');
   const machineTypeFilter = document.getElementById('machineTypeFilter');
-  const sortBy = document.getElementById('sortBy');
   const container = document.getElementById('serviceNotesContainer');
   const cards = Array.from(container.querySelectorAll('.service-note-card'));
 
   function filterAndSort() {
     const searchTerm = searchInput.value.toLowerCase();
     const selectedType = machineTypeFilter.value;
-    const sortOption = sortBy.value;
 
    
     let filteredCards = cards.filter(card => {
@@ -220,22 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     
-    filteredCards.sort((a, b) => {
-      switch(sortOption) {
-        case 'date_asc':
-          return new Date(a.dataset.date) - new Date(b.dataset.date);
-        case 'date_desc':
-          return new Date(b.dataset.date) - new Date(a.dataset.date);
-        case 'fee_asc':
-          return parseFloat(a.dataset.fee) - parseFloat(b.dataset.fee);
-        case 'fee_desc':
-          return parseFloat(b.dataset.fee) - parseFloat(a.dataset.fee);
-        default:
-          return new Date(b.dataset.date) - new Date(a.dataset.date);
-      }
-    });
 
-    
     cards.forEach(card => card.style.display = 'none');
 
    
@@ -266,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   searchInput.addEventListener('input', filterAndSort);
   machineTypeFilter.addEventListener('change', filterAndSort);
-  sortBy.addEventListener('change', filterAndSort);
+  
 });
 </script>
 

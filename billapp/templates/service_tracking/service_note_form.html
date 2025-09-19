@@ -36,7 +36,7 @@
     <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
       <form method="post">
         {% csrf_token %}
-
+        <input type="hidden" name="next" value="{{ request.GET.next|default:request.META.HTTP_REFERER }}">
         <div class="space-y-6">
           
           <!-- Service Date -->
@@ -104,7 +104,8 @@
               Add Service Note
             {% endif %}
           </button>
-          <a href="{% url 'machine_detail' machine.pk %}" class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition duration-200">
+          <a href="{{ request.GET.next|default:request.META.HTTP_REFERER|default:machine.get_absolute_url }}" 
+            class="flex-1 bg-black text-white font-bold text-center py-3 rounded-full hover:bg-gray-800 transition duration-200">
             Cancel
           </a>
         </div>

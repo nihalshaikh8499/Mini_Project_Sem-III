@@ -13,10 +13,10 @@ class Invoice(models.Model):
     BILL = 'BILL'
     QUOTATION = 'QUOTATION'
     TYPE_CHOICES = [(BILL, 'Bill'), (QUOTATION, 'Quotation')]
+
     PENDING = 'PENDING'
     PAID = 'PAID'
     OVERDUE = 'OVERDUE'
-
 
     invoice_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     invoice_number = models.CharField(max_length=20, unique=True)
@@ -26,11 +26,25 @@ class Invoice(models.Model):
     file_path = models.FilePathField(path="bills", blank=True)
     mailed = models.BooleanField(default=False)
     ai_summary = models.TextField(blank=True, null=True)
-    payment_status = models.BooleanField(default=False) 
 
+    # Only relevant for bills
+    payment_status = models.CharField(
+        max_length=10,
+        choices=[(PENDING, 'Pending'), (PAID, 'Paid'), (OVERDUE, 'Overdue')],
+        blank=True,
+        default=PENDING,
+        null=True
+        
+    )
+
+    def save(self, *args, **kwargs):
+        if self.invoice_type == self.QUOTATION:
+            self.payment_status = None
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.invoice_type} - {self.invoice_number}"
+        return f"{self.invoice_type} - {self.invoice_number} - {self.payment_status}"
+    
     def get_absolute_url(self):
         return reverse("invoice_detail", args=[str(self.pk)])
 
@@ -71,6 +85,9 @@ class Machines(models.Model):
     def __str__(self):
         return self.machine_name
     
+    def get_absolute_url(self):
+        return reverse("machine_detail", args=[str(self.id)])
+    
 class ServiceNote(models.Model):
     machine = models.ForeignKey(
         'Machines',
@@ -81,10 +98,11 @@ class ServiceNote(models.Model):
     note = models.TextField()
     serviceman_name = models.CharField(max_length=255, blank=True) 
     fee_charged = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
+    copy_counter_at_service = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Note for {self.machine.machine_name} on {self.date_of_service}"
 
     class Meta:
-        ordering = ['-date_of_service']
+        ordering = ['-created_at']

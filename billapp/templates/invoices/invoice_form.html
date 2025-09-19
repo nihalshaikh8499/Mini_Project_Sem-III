@@ -11,13 +11,7 @@
       </h1>
     </div>
     
-    {% if messages %}
-      {% for message in messages %}
-        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
+
     
     <div class="bg-white border border-gray-200 shadow-md p-6 rounded-[24px]">
       <form method="post">

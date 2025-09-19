@@ -46,6 +46,7 @@
       <form method="post">
         {% csrf_token %}
         <div class="flex flex-col md:flex-row gap-4">
+          <input type="hidden" name="next" value="{{ request.META.HTTP_REFERER }}">
           <button type="submit" class="flex-1 bg-red-500 text-white font-bold py-3 rounded-full hover:bg-red-600 transition">
             Yes, Delete Service Note
           </button>
