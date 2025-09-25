@@ -21,7 +21,7 @@ class Invoice(models.Model):
     invoice_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     invoice_number = models.CharField(max_length=20, unique=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     file_path = models.FilePathField(path="bills", blank=True)
     mailed = models.BooleanField(default=False)
@@ -67,11 +67,7 @@ class Machines(models.Model):
         ("MFD", "Multifunction Device"),
         ("SCANNER", "Scanner"),
         ("FAX", "Fax Machine"),
-        ("PART", "Machine Part"),
-        ("TONER", "Toner Cartridge"),
-        ("INK", "Ink Cartridge"),
-        ("RIBBON", "Ribbon"),
-        ("PAPER", "Paper Tray"),
+
     ]
     
     machine_name = models.CharField(max_length=255)

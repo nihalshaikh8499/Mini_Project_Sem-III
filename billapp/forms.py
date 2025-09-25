@@ -152,7 +152,7 @@ class MachineForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Add Tailwind CSS classes to all form fields
+        
         for field_name, field in self.fields.items():
             field.widget.attrs.update({
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500'
@@ -195,24 +195,24 @@ class ServiceNoteForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set field labels
+       
         self.fields['date_of_service'].label = 'Service Date'
         self.fields['serviceman_name'].label = 'Serviceman Name'
         self.fields['note'].label = 'Service Notes'
         self.fields['fee_charged'].label = 'Service Fee (₹)'
         
-        # Make fields optional
+       
         self.fields['serviceman_name'].required = False
         self.fields['fee_charged'].required = False
         
-        # Set help text
+       
         self.fields['fee_charged'].help_text = 'Optional - Enter the service fee in rupees (e.g., 500.00)'
         
-        # Set today's date as default for new forms (not when editing existing service notes)
+       
         if not self.instance.pk:  # Only for new service notes
             today = timezone.now().date()
             self.fields['date_of_service'].initial = today
-            # Also set the widget value for immediate display
+           
             self.fields['date_of_service'].widget.attrs['value'] = today.strftime('%Y-%m-%d')
 
 class CopyCounterForm(forms.ModelForm):

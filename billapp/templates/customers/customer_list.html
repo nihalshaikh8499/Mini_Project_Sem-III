@@ -5,7 +5,6 @@
 <div class="bg-white text-black min-h-screen">
   <div class="max-w-7xl mx-auto px-4 py-6">
     
-    
     <div class="flex flex-col md:flex-row justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-black mb-4 md:mb-0">Customer Management</h1>
       <a href="{% url 'customer_create' %}" class="bg-yellow-500 text-black font-bold px-6 py-3 shadow-md rounded-full hover:bg-yellow-600 transition">
@@ -13,9 +12,8 @@
       </a>
     </div>
 
-    
     <div class="bg-white border border-gray-200 shadow-md p-4 rounded-[24px] mb-6">
-      <form method="GET" class="flex  gap-4">
+      <form method="GET" class="flex gap-4">
         <input 
           type="text" 
           name="search" 
@@ -34,10 +32,8 @@
       </form>
     </div>
 
-    
     <div class="bg-white border border-gray-200 shadow-md p-4 rounded-[24px]">
       <h2 class="text-xl font-semibold text-black mb-4">All Customers</h2>
-      
       
       {% if customers %}
       <div class="overflow-x-auto">
@@ -53,20 +49,17 @@
           </thead>
           <tbody class="bg-white">
             {% for customer in customers %}
-            <tr class="border-t hover:bg-gray-100">
+            <tr class="border-t hover:bg-gray-100 cursor-pointer" onclick="window.location.href='{% url 'customer_detail' customer.pk %}'">
               <td class="px-4 py-2 font-medium text-center">{{ customer.name }}</td>
               <td class="px-4 py-2 text-center">{{ customer.email }}</td>
               <td class="px-4 py-2 text-center">{{ customer.phone }}</td>
               <td class="px-4 py-2 text-center">{{ customer.gst_number|default:"-" }}</td>
               <td class="px-4 py-2 text-center">
                 <div class="flex justify-center gap-2">
-                  <a href="{% url 'customer_detail' customer.pk %}" class="shadow-md bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition">
-                    View
-                  </a>
-                  <a href="{% url 'customer_update' customer.pk %}" class="shadow-md bg-green-500 text-white px-3 py-1 rounded-full text-sm hover:bg-green-600 transition">
+                  <a href="{% url 'customer_update' customer.pk %}" onclick="event.stopPropagation();" class="shadow-md bg-green-500 text-white px-3 py-1 rounded-full text-sm hover:bg-green-600 transition">
                     Edit
                   </a>
-                  <a href="{% url 'customer_delete' customer.pk %}" class="shadow-md bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition">
+                  <a href="{% url 'customer_delete' customer.pk %}" onclick="event.stopPropagation();" class="shadow-md bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition">
                     Delete
                   </a>
                 </div>
@@ -77,7 +70,6 @@
         </table>
       </div>
 
-      
       {% if is_paginated %}
       <div class="flex justify-center mt-6">
         <div class="flex gap-2">

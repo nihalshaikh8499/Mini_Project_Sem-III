@@ -8,10 +8,9 @@
     
     <div class="flex flex-col md:flex-row justify-between gap-6">
       <div class="md:w-2/3 bg-white border border-gray-200 shadow-md p-4 rounded-[24px]">
-        <h2 class="text-lg font-semibold text-black mb-4">Sales Overview</h2>
+        <h2 class="text-lg font-semibold text-black mb-4">Revenue Overview</h2>
         <div class="w-full h-64 flex items-center justify-center bg-gray-50 rounded">
-          
-          <canvas id="salesChart" class="w-full h-full"></canvas>
+          <canvas id="revenueChart" class="w-full h-full"></canvas>
         </div>
       </div>
 
@@ -122,15 +121,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const ctx = document.getElementById('salesChart').getContext('2d');
-  const salesChart = new Chart(ctx, {
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  const revenueChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      // MODIFIED: Simplified to a single dataset
       datasets: [{
-        label: 'Sales (₹)',
-        data: {{ monthly_sales_data|safe }},
-        backgroundColor: '#facc15',
+        label: 'Total Revenue (₹)',
+        // Use the new combined data variable
+        data: {{ monthly_revenue_data|safe }}, 
+        backgroundColor: '#facc15', // Yellow color
         borderRadius: 6
       }]
     },
@@ -138,7 +139,9 @@
       responsive: true,
       maintainAspectRatio: false,
       scales: {
-        y: { beginAtZero: true }
+        y: { 
+            beginAtZero: true 
+        }
       }
     }
   });

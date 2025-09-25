@@ -126,35 +126,51 @@ class CustomerDeleteView(LoginRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 def index(request):
-    recent_customers = Customer.objects.order_by('-id')[:5] 
+    recent_customers = Customer.objects.order_by('-id')[:5]
     recent_invoices = Invoice.objects.all().order_by('-date')[:5]
 
-    
     current_year = datetime.now().year
-    invoices = Invoice.objects.filter(
-        date__year=current_year, 
-        invoice_type=Invoice.BILL, 
+
+    
+    paid_bills = Invoice.objects.filter(
+        date__year=current_year,
+        invoice_type=Invoice.BILL,
         payment_status=Invoice.PAID
     )
-
-    monthly_sales = (
-        invoices.annotate(month=TruncMonth('date'))
+    monthly_bill_sales = (
+        paid_bills.annotate(month=TruncMonth('date'))
                 .values('month')
                 .annotate(total=Sum('total_amount'))
                 .order_by('month')
     )
-
-    sales_data = [0] * 12
-    for entry in monthly_sales:
+    bill_sales_data = [0] * 12
+    for entry in monthly_bill_sales:
         month_index = entry['month'].month - 1
         if entry['total'] is not None:
-            sales_data[month_index] = float(entry['total'])
+            bill_sales_data[month_index] = float(entry['total'])
 
+    # --- 2. Calculate Monthly Service Fees ---
+    service_notes = ServiceNote.objects.filter(date_of_service__year=current_year)
+    monthly_service_fees = (
+        service_notes.annotate(month=TruncMonth('date_of_service'))
+                     .values('month')
+                     .annotate(total=Sum('fee_charged'))
+                     .order_by('month')
+    )
+    service_fee_data = [0] * 12
+    for entry in monthly_service_fees:
+        month_index = entry['month'].month - 1
+        if entry['total'] is not None:
+            service_fee_data[month_index] = float(entry['total'])
 
+    
+    combined_revenue_data = [x + y for x, y in zip(bill_sales_data, service_fee_data)]
+
+    
     return render(request, 'index.html', {
         'recent_customers': recent_customers,
         'recent_invoices': recent_invoices,
-        'monthly_sales_data': sales_data,
+        'monthly_revenue_data': combined_revenue_data, 
     })
 
 
@@ -535,20 +551,20 @@ def add_machine(request, customer_id):
     if request.method == 'POST':
         form = MachineForm(request.POST)
         if form.is_valid():
-            # Create a machine instance but don't save it to the DB yet
+            
             machine = form.save(commit=False)
             
-            # Set the customer relationship
+           
             machine.customer = customer
             
-            # Automatically calculate the warranty expiry date
+            
             purchase_date = form.cleaned_data['purchase_date']
             machine.warranty_expiry = purchase_date + relativedelta(months=+6)
             
-            # Now save the complete machine object to the database
+            
             machine.save()
             
-            # Redirect back to the customer's detail page
+            
             return redirect('customer_detail', pk=customer.id)
     else:
         form = MachineForm()
@@ -564,7 +580,7 @@ def machine_update(request, pk):
     if request.method == 'POST':
         form = MachineForm(request.POST, instance=machine)
         if form.is_valid():
-            # Recalculate warranty if purchase date changes
+            
             updated_machine = form.save(commit=False)
             if 'purchase_date' in form.changed_data:
                 purchase_date = form.cleaned_data['purchase_date']
@@ -628,13 +644,13 @@ def service_notes_view(request):
     """
     View to display all service notes with machine count and fee information
     """
-    # Get all service notes ordered by date (newest first)
+    
     service_notes = ServiceNote.objects.select_related(
         'machine', 
         'machine__customer'
     ).order_by('-created_at')
     
-    # Calculate statistics
+    
     stats = service_notes.aggregate(
         total_notes=Count('id'),
         total_revenue=Sum('fee_charged'),
